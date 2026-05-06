@@ -11,6 +11,8 @@ from p2app.events.database import (
     DatabaseOpenedEvent, DatabaseOpenFailedEvent, DatabaseClosedEvent
 )
 from p2app.engine.database import open_database, close_database
+from p2app.events.continents import StartContinentSearchEvent
+from p2app.engine.continents import search_continents
 
 
 class Engine:
@@ -32,6 +34,12 @@ class Engine:
 
         elif isinstance(event, CloseDatabaseEvent):
             yield from self._close_database()
+
+        elif isinstance(event, StartContinentSearchEvent):
+            yield from search_continents(
+                self._connection,
+                event.continent_code(), event.name()
+            )
 
     def _open_database(self, event):
         try:
