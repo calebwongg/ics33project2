@@ -13,6 +13,13 @@ from p2app.events.database import (
 from p2app.engine.database import open_database, close_database
 from p2app.events.continents import StartContinentSearchEvent
 from p2app.engine.continents import search_continents
+from p2app.events.continents import StartContinentSearchEvent, LoadContinentEvent
+from p2app.engine.continents import search_continents, load_continent
+
+from p2app.events.continents import (
+    StartContinentSearchEvent, LoadContinentEvent, SaveNewContinentEvent
+)
+from p2app.engine.continents import search_continents, load_continent, save_new_continent
 
 
 class Engine:
@@ -39,6 +46,16 @@ class Engine:
             yield from search_continents(
                 self._connection,
                 event.continent_code(), event.name()
+            )
+
+        elif isinstance(event, LoadContinentEvent):
+            yield from load_continent(
+                self._connection, event.continent_id()
+            )
+
+        elif isinstance(event, SaveNewContinentEvent):
+            yield from save_new_continent(
+                self._connection, event.continent()
             )
 
     def _open_database(self, event):
