@@ -4,10 +4,13 @@
 # Project 2: Learning to Fly
 #
 # An object that represents the engine of the application.
-#
-# This is the outermost layer of the part of the program that you'll need to build,
-# which means that YOU WILL DEFINITELY NEED TO MAKE CHANGES TO THIS FILE.
 
+from p2app.events.app import QuitInitiatedEvent, EndApplicationEvent
+from p2app.events.database import (
+    OpenDatabaseEvent, CloseDatabaseEvent,
+    DatabaseOpenedEvent, DatabaseOpenFailedEvent, DatabaseClosedEvent
+)
+from p2app.engine.database import open_database, close_database
 
 
 class Engine:
@@ -18,15 +21,27 @@ class Engine:
     """
 
     def __init__(self):
-        """Initializes the engine"""
-        pass
-
+        self._connection = None
 
     def process_event(self, event):
-        """A generator function that processes one event sent from the user interface,
-        yielding zero or more events in response."""
+        if isinstance(event, QuitInitiatedEvent):
+            yield EndApplicationEvent()
 
-        # This is a way to write a generator function that always yields zero values.
-        # You'll want to remove this and replace it with your own code, once you start
-        # writing your engine, but this at least allows the program to run.
-        yield from ()
+        elif isinstance(event, OpenDatabaseEvent):
+            yield from self._open_database(event)
+
+        elif isinstance(event, CloseDatabaseEvent):
+            yield from self._close_database()
+
+    def _open_database(self, event):
+        try:
+            self._connection = open_database(event.path())
+            yield DatabaseOpenedEvent(event.path())
+        except Exception as e:
+            yield DatabaseOpenFailedEvent(str(e))
+
+    def _close_database(self):
+        if self._connection is not None:
+            close_database(self._connection)
+            self._connection = None
+        yield DatabaseClosedEvent()
