@@ -10,41 +10,25 @@ from p2app.events.database import (
     OpenDatabaseEvent, CloseDatabaseEvent,
     DatabaseOpenedEvent, DatabaseOpenFailedEvent, DatabaseClosedEvent
 )
-from p2app.engine.database import open_database, close_database
-from p2app.events.continents import StartContinentSearchEvent
-from p2app.engine.continents import search_continents
-from p2app.events.continents import StartContinentSearchEvent, LoadContinentEvent
-from p2app.engine.continents import search_continents, load_continent
-
-from p2app.events.continents import (
-    StartContinentSearchEvent, LoadContinentEvent, SaveNewContinentEvent
-)
-from p2app.engine.continents import search_continents, load_continent, save_new_continent
 from p2app.events.continents import (
     StartContinentSearchEvent, LoadContinentEvent,
     SaveNewContinentEvent, SaveContinentEvent
 )
-from p2app.engine.continents import (
-    search_continents, load_continent, save_new_continent, save_continent
-)
-
-from p2app.events.countries import StartCountrySearchEvent, LoadCountryEvent
-from p2app.engine.countries import search_countries, load_country
-
 from p2app.events.countries import (
     StartCountrySearchEvent, LoadCountryEvent,
     SaveNewCountryEvent, SaveCountryEvent
 )
-from p2app.engine.countries import (
-    search_countries, load_country, save_new_country, save_country
-)
-
-from p2app.events.regions import StartRegionSearchEvent, LoadRegionEvent
-from p2app.engine.regions import search_regions, load_region
-
 from p2app.events.regions import (
     StartRegionSearchEvent, LoadRegionEvent,
     SaveNewRegionEvent, SaveRegionEvent
+)
+
+from p2app.engine.database import open_database, close_database
+from p2app.engine.continents import (
+    search_continents, load_continent, save_new_continent, save_continent
+)
+from p2app.engine.countries import (
+    search_countries, load_country, save_new_country, save_country
 )
 from p2app.engine.regions import (
     search_regions, load_region, save_new_region, save_region
@@ -139,6 +123,7 @@ class Engine:
             self._connection = open_database(event.path())
             yield DatabaseOpenedEvent(event.path())
         except Exception as e:
+            self._connection = None
             yield DatabaseOpenFailedEvent(str(e))
 
     def _close_database(self):

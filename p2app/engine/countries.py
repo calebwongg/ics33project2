@@ -6,11 +6,7 @@
 # Functions that handle country-related database operations.
 
 import sqlite3
-from p2app.events.countries import (
-    Country, CountrySearchResultEvent, CountryLoadedEvent
-)
 from p2app.events.app import ErrorEvent
-
 from p2app.events.countries import (
     Country, CountrySearchResultEvent, CountryLoadedEvent,
     CountrySavedEvent, SaveCountryFailedEvent

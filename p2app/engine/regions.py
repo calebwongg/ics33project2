@@ -6,10 +6,11 @@
 # Functions that handle region-related database operations.
 
 import sqlite3
-from p2app.events.regions import (
-    Region, RegionSearchResultEvent, RegionLoadedEvent
-)
 from p2app.events.app import ErrorEvent
+from p2app.events.regions import (
+    Region, RegionSearchResultEvent, RegionLoadedEvent,
+    RegionSavedEvent, SaveRegionFailedEvent
+)
 
 
 def _empty_to_none(value: str) -> str | None:
@@ -17,11 +18,6 @@ def _empty_to_none(value: str) -> str | None:
     if value is None or value == '':
         return None
     return value
-
-from p2app.events.regions import (
-    Region, RegionSearchResultEvent, RegionLoadedEvent,
-    RegionSavedEvent, SaveRegionFailedEvent
-)
 
 def search_regions(connection: sqlite3.Connection,
                    region_code: str, local_code: str, name: str):
