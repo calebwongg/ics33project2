@@ -11,6 +11,11 @@ from p2app.events.countries import (
 )
 from p2app.events.app import ErrorEvent
 
+from p2app.events.countries import (
+    Country, CountrySearchResultEvent, CountryLoadedEvent,
+    CountrySavedEvent, SaveCountryFailedEvent
+)
+
 
 def _empty_to_none(value: str) -> str | None:
     if value is None or value == '':
@@ -68,3 +73,56 @@ def load_country(connection: sqlite3.Connection, country_id: int):
         yield CountryLoadedEvent(country)
     else:
         yield ErrorEvent('Country not found.')
+
+def save_new_country(connection: sqlite3.Connection, country: Country):
+    """Inserts a new country into the database.
+    Yields a CountrySavedEvent on success or SaveCountryFailedEvent on failure."""
+    try:
+        keywords = _empty_to_none(country.keywords)
+
+        cursor = connection.execute(
+            'INSERT INTO country (country_code, name, continent_id, '
+            'wikipedia_link, keywords) VALUES (?, ?, ?, ?, ?)',
+            (country.country_code, country.name, country.continent_id,
+             country.wikipedia_link, keywords)
+        )
+        connection.commit()
+
+        new_country = Country(
+            country_id=cursor.lastrowid,
+            country_code=country.country_code,
+            name=country.name,
+            continent_id=country.continent_id,
+            wikipedia_link=country.wikipedia_link,
+            keywords=keywords
+        )
+        yield CountrySavedEvent(new_country)
+    except sqlite3.Error as e:
+        connection.rollback()
+        yield SaveCountryFailedEvent(str(e))
+
+
+def save_country(connection: sqlite3.Connection, country: Country):
+    try:
+        keywords = _empty_to_none(country.keywords)
+
+        connection.execute(
+            'UPDATE country SET country_code = ?, name = ?, continent_id = ?, '
+            'wikipedia_link = ?, keywords = ? WHERE country_id = ?',
+            (country.country_code, country.name, country.continent_id,
+             country.wikipedia_link, keywords, country.country_id)
+        )
+        connection.commit()
+
+        updated_country = Country(
+            country_id=country.country_id,
+            country_code=country.country_code,
+            name=country.name,
+            continent_id=country.continent_id,
+            wikipedia_link=country.wikipedia_link,
+            keywords=keywords
+        )
+        yield CountrySavedEvent(updated_country)
+    except sqlite3.Error as e:
+        connection.rollback()
+        yield SaveCountryFailedEvent(str(e))
