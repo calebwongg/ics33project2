@@ -67,3 +67,15 @@ def save_new_continent(connection: sqlite3.Connection, continent: Continent):
     except sqlite3.Error as e:
         connection.rollback()
         yield SaveContinentFailedEvent(str(e))
+
+def save_continent(connection: sqlite3.Connection, continent: Continent):
+    try:
+        connection.execute(
+            'UPDATE continent SET continent_code = ?, name = ? WHERE continent_id = ?',
+            (continent.continent_code, continent.name, continent.continent_id)
+        )
+        connection.commit()
+        yield ContinentSavedEvent(continent)
+    except sqlite3.Error as e:
+        connection.rollback()
+        yield SaveContinentFailedEvent(str(e))

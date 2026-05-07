@@ -20,6 +20,16 @@ from p2app.events.continents import (
     StartContinentSearchEvent, LoadContinentEvent, SaveNewContinentEvent
 )
 from p2app.engine.continents import search_continents, load_continent, save_new_continent
+from p2app.events.continents import (
+    StartContinentSearchEvent, LoadContinentEvent,
+    SaveNewContinentEvent, SaveContinentEvent
+)
+from p2app.engine.continents import (
+    search_continents, load_continent, save_new_continent, save_continent
+)
+
+from p2app.events.countries import StartCountrySearchEvent, LoadCountryEvent
+from p2app.engine.countries import search_countries, load_country
 
 
 class Engine:
@@ -56,6 +66,22 @@ class Engine:
         elif isinstance(event, SaveNewContinentEvent):
             yield from save_new_continent(
                 self._connection, event.continent()
+            )
+
+        elif isinstance(event, SaveContinentEvent):
+            yield from save_continent(
+                self._connection, event.continent()
+            )
+
+        elif isinstance(event, StartCountrySearchEvent):
+            yield from search_countries(
+                self._connection,
+                event.country_code(), event.name()
+            )
+
+        elif isinstance(event, LoadCountryEvent):
+            yield from load_country(
+                self._connection, event.country_id()
             )
 
     def _open_database(self, event):
