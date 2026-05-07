@@ -42,6 +42,14 @@ from p2app.engine.countries import (
 from p2app.events.regions import StartRegionSearchEvent, LoadRegionEvent
 from p2app.engine.regions import search_regions, load_region
 
+from p2app.events.regions import (
+    StartRegionSearchEvent, LoadRegionEvent,
+    SaveNewRegionEvent, SaveRegionEvent
+)
+from p2app.engine.regions import (
+    search_regions, load_region, save_new_region, save_region
+)
+
 
 class Engine:
     """An object that represents the application's engine, whose main role is to
@@ -114,6 +122,16 @@ class Engine:
         elif isinstance(event, LoadRegionEvent):
             yield from load_region(
                 self._connection, event.region_id()
+            )
+
+        elif isinstance(event, SaveNewRegionEvent):
+            yield from save_new_region(
+                self._connection, event.region()
+            )
+
+        elif isinstance(event, SaveRegionEvent):
+            yield from save_region(
+                self._connection, event.region()
             )
 
     def _open_database(self, event):

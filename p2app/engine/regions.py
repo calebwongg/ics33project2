@@ -18,6 +18,10 @@ def _empty_to_none(value: str) -> str | None:
         return None
     return value
 
+from p2app.events.regions import (
+    Region, RegionSearchResultEvent, RegionLoadedEvent,
+    RegionSavedEvent, SaveRegionFailedEvent
+)
 
 def search_regions(connection: sqlite3.Connection,
                    region_code: str, local_code: str, name: str):
@@ -81,3 +85,68 @@ def load_region(connection: sqlite3.Connection, region_id: int):
         yield RegionLoadedEvent(region)
     else:
         yield ErrorEvent('Region not found.')
+
+def save_new_region(connection: sqlite3.Connection, region: Region):
+    """Inserts a new region into the database.
+    Yields a RegionSavedEvent on success or SaveRegionFailedEvent on failure."""
+    try:
+        wikipedia_link = _empty_to_none(region.wikipedia_link)
+        keywords = _empty_to_none(region.keywords)
+
+        cursor = connection.execute(
+            'INSERT INTO region (region_code, local_code, name, '
+            'continent_id, country_id, wikipedia_link, keywords) '
+            'VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (region.region_code, region.local_code, region.name,
+             region.continent_id, region.country_id,
+             wikipedia_link, keywords)
+        )
+        connection.commit()
+
+        new_region = Region(
+            region_id=cursor.lastrowid,
+            region_code=region.region_code,
+            local_code=region.local_code,
+            name=region.name,
+            continent_id=region.continent_id,
+            country_id=region.country_id,
+            wikipedia_link=wikipedia_link,
+            keywords=keywords
+        )
+        yield RegionSavedEvent(new_region)
+    except sqlite3.Error as e:
+        connection.rollback()
+        yield SaveRegionFailedEvent(str(e))
+
+
+def save_region(connection: sqlite3.Connection, region: Region):
+    """Updates an existing region in the database.
+    Yields a RegionSavedEvent on success or SaveRegionFailedEvent on failure."""
+    try:
+        wikipedia_link = _empty_to_none(region.wikipedia_link)
+        keywords = _empty_to_none(region.keywords)
+
+        connection.execute(
+            'UPDATE region SET region_code = ?, local_code = ?, name = ?, '
+            'continent_id = ?, country_id = ?, wikipedia_link = ?, keywords = ? '
+            'WHERE region_id = ?',
+            (region.region_code, region.local_code, region.name,
+             region.continent_id, region.country_id,
+             wikipedia_link, keywords, region.region_id)
+        )
+        connection.commit()
+
+        updated_region = Region(
+            region_id=region.region_id,
+            region_code=region.region_code,
+            local_code=region.local_code,
+            name=region.name,
+            continent_id=region.continent_id,
+            country_id=region.country_id,
+            wikipedia_link=wikipedia_link,
+            keywords=keywords
+        )
+        yield RegionSavedEvent(updated_region)
+    except sqlite3.Error as e:
+        connection.rollback()
+        yield SaveRegionFailedEvent(str(e))
