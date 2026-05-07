@@ -9,8 +9,7 @@ from p2app.events.continents import (
 
 def search_continents(connection: sqlite3.Connection,
                       continent_code: str, name: str):
-    """Searches for continents matching the given code and/or name.
-    Yields a ContinentSearchResultEvent for each match found."""
+    """searches the continent table by code and/or name and yields one result event per match"""
     query = 'SELECT continent_id, continent_code, name FROM continent WHERE 1 = 1'
     params = []
 
@@ -33,6 +32,7 @@ def search_continents(connection: sqlite3.Connection,
         yield ContinentSearchResultEvent(continent)
 
 def load_continent(connection: sqlite3.Connection, continent_id: int):
+    """loads one continent by its id and yields a loaded event or an error event if not found"""
     cursor = connection.execute(
         'SELECT continent_id, continent_code, name FROM continent WHERE continent_id = ?',
         (continent_id,)
@@ -51,6 +51,7 @@ def load_continent(connection: sqlite3.Connection, continent_id: int):
 
 
 def save_new_continent(connection: sqlite3.Connection, continent: Continent):
+    """inserts a new continent and yields the saved event or a failed event on error"""
     try:
         cursor = connection.execute(
             'INSERT INTO continent (continent_code, name) VALUES (?, ?)',
@@ -69,6 +70,7 @@ def save_new_continent(connection: sqlite3.Connection, continent: Continent):
         yield SaveContinentFailedEvent(str(e))
 
 def save_continent(connection: sqlite3.Connection, continent: Continent):
+    """updates an existing continent and yields the saved event or a failed event on error"""
     try:
         connection.execute(
             'UPDATE continent SET continent_code = ?, name = ? WHERE continent_id = ?',

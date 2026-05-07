@@ -43,9 +43,11 @@ class Engine:
     """
 
     def __init__(self):
+        """sets up the engine with no database connection yet"""
         self._connection = None
 
     def process_event(self, event):
+        """receives an event from the ui, dispatches it to the right handler, and yields back any result events"""
         if isinstance(event, QuitInitiatedEvent):
             yield EndApplicationEvent()
 
@@ -119,6 +121,7 @@ class Engine:
             )
 
     def _open_database(self, event):
+        """opens the database at the path in the event and yields opened or open failed"""
         try:
             self._connection = open_database(event.path())
             yield DatabaseOpenedEvent(event.path())
@@ -127,6 +130,7 @@ class Engine:
             yield DatabaseOpenFailedEvent(str(e))
 
     def _close_database(self):
+        """closes the current connection if there is one and yields the closed event"""
         if self._connection is not None:
             close_database(self._connection)
             self._connection = None

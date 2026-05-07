@@ -14,15 +14,14 @@ from p2app.events.regions import (
 
 
 def _empty_to_none(value: str) -> str | None:
-    """Converts empty strings to None for nullable TEXT columns."""
+    """turns an empty string into none so nullable text columns store null instead of blank"""
     if value is None or value == '':
         return None
     return value
 
 def search_regions(connection: sqlite3.Connection,
                    region_code: str, local_code: str, name: str):
-    """Searches for regions matching the given code, local code, and/or name.
-    Yields a RegionSearchResultEvent for each match found."""
+    """searches the region table by region code, local code, and/or name and yields one result event per match"""
     query = ('SELECT region_id, region_code, local_code, name, '
              'continent_id, country_id, wikipedia_link, keywords '
              'FROM region WHERE 1 = 1')
@@ -57,8 +56,7 @@ def search_regions(connection: sqlite3.Connection,
 
 
 def load_region(connection: sqlite3.Connection, region_id: int):
-    """Loads a single region by its ID.
-    Yields a RegionLoadedEvent or an ErrorEvent."""
+    """loads one region by its id and yields a loaded event or an error event if not found"""
     cursor = connection.execute(
         'SELECT region_id, region_code, local_code, name, '
         'continent_id, country_id, wikipedia_link, keywords '
@@ -83,8 +81,7 @@ def load_region(connection: sqlite3.Connection, region_id: int):
         yield ErrorEvent('Region not found.')
 
 def save_new_region(connection: sqlite3.Connection, region: Region):
-    """Inserts a new region into the database.
-    Yields a RegionSavedEvent on success or SaveRegionFailedEvent on failure."""
+    """inserts a new region and yields the saved event or a failed event on error"""
     try:
         wikipedia_link = _empty_to_none(region.wikipedia_link)
         keywords = _empty_to_none(region.keywords)
@@ -116,8 +113,7 @@ def save_new_region(connection: sqlite3.Connection, region: Region):
 
 
 def save_region(connection: sqlite3.Connection, region: Region):
-    """Updates an existing region in the database.
-    Yields a RegionSavedEvent on success or SaveRegionFailedEvent on failure."""
+    """updates an existing region and yields the saved event or a failed event on error"""
     try:
         wikipedia_link = _empty_to_none(region.wikipedia_link)
         keywords = _empty_to_none(region.keywords)

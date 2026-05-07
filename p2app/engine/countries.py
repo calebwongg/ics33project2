@@ -14,6 +14,7 @@ from p2app.events.countries import (
 
 
 def _empty_to_none(value: str) -> str | None:
+    """turns an empty string into none so nullable text columns store null instead of blank"""
     if value is None or value == '':
         return None
     return value
@@ -21,6 +22,7 @@ def _empty_to_none(value: str) -> str | None:
 
 def search_countries(connection: sqlite3.Connection,
                      country_code: str, name: str):
+    """searches the country table by code and/or name and yields one result event per match"""
     query = ('SELECT country_id, country_code, name, continent_id, '
              'wikipedia_link, keywords FROM country WHERE 1 = 1')
     params = []
@@ -48,8 +50,7 @@ def search_countries(connection: sqlite3.Connection,
 
 
 def load_country(connection: sqlite3.Connection, country_id: int):
-    """Loads a single country by its ID.
-    Yields a CountryLoadedEvent or an ErrorEvent."""
+    """loads one country by its id and yields a loaded event or an error event if not found"""
     cursor = connection.execute(
         'SELECT country_id, country_code, name, continent_id, '
         'wikipedia_link, keywords FROM country WHERE country_id = ?',
@@ -71,8 +72,7 @@ def load_country(connection: sqlite3.Connection, country_id: int):
         yield ErrorEvent('Country not found.')
 
 def save_new_country(connection: sqlite3.Connection, country: Country):
-    """Inserts a new country into the database.
-    Yields a CountrySavedEvent on success or SaveCountryFailedEvent on failure."""
+    """inserts a new country and yields the saved event or a failed event on error"""
     try:
         keywords = _empty_to_none(country.keywords)
 
@@ -99,6 +99,7 @@ def save_new_country(connection: sqlite3.Connection, country: Country):
 
 
 def save_country(connection: sqlite3.Connection, country: Country):
+    """updates an existing country and yields the saved event or a failed event on error"""
     try:
         keywords = _empty_to_none(country.keywords)
 
